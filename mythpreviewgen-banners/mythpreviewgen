@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# echo "mythpreviewgen: args are" "$*" >> /tmp/mythpreviewgen
+
+# Note that we use `"$@"' to let each command-line parameter expand to a 
+# separate word. The quotes around `$@' are essential!
+# We need TEMP as the `eval set --' would nuke the return value of getopt.
+TEMP=`getopt -o a --long size:,infile:,outfile:,chanid:,starttime: -n 'mythpreviewgen' -- "$@"`
+
+#if [ $? != 0 ] ; then echo "getopt error, terminating..." >&2 ; exit 1 ; fi
+
+# Note the quotes around `$TEMP': they are essential!
+eval set -- "$TEMP"
+
+storage='/var/mythtv/media/recordings'
+rec_storage='/var/mythtv/media/recordings'
+art_storage='/var/mythtv/media/recordings'
+pre_storage='/var/mythtv/media/recordings'
+# rec_storage='/var/mythtv/media/recordings'
+# art_storage='/var/mythtv/media/artwork'
+# pre_storage='/var/mythtv/media/previews'
+preview_size=''
+preview_infile=''
+preview_outfile=''
+preview_chanid=''
+preview_starttime=''
+while true ; do
+        case "$1" in
+                --size) preview_size="$2" ; shift 2 ;;
+                --infile) preview_infile="$2" ; shift 2 ;;
+                --outfile) preview_outfile="$2" ; shift 2 ;;
+                --chanid) preview_chanid="$2" ; shift 2 ;;
+                --starttime) preview_starttime="$2" ; shift 2 ;;
+                --) shift ; break ;;
+                *) echo "internal error!" ; exit 1 ;;
+        esac
+done
+
+
+
+if [[ "x$preview_infile" == "x" ]]; then
+	preview_infile=${preview_chanid}_$preview_starttime
+fi
+
+#echo mysql: $(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg) >> /tmp/mythpreviewgen
+mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg | head -n1)
+
+# 1004 20140114175900
+
+# 1002_20140109212900
+
+if [[ "x$preview_outfile" == "x" ]]; then
+	preview_outfile=$pre_storage/$(echo $mysqlout | cut -d' ' -f1).png
+fi
+
+banner=$art_storage/$(echo $mysqlout | cut -s -d' ' -f2-)
+
+if [[ "x$banner" == "x$art_storage/" ]]; then
+	mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref WHERE recorded.basename LIKE '$preview_infile%' ORDER BY recordedartwork.season;" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg | head -n1)
+	banner=$art_storage/$(echo $mysqlout | cut -s -d' ' -f2-)
+	if [[ "x$preview_outfile" == "x$pre_storage/.png" ]]; then
+		preview_outfile=$pre_storage/$(echo $mysqlout | cut -d' ' -f1).png
+	fi
+fi
+
+if [[ "x$banner" == "x$art_storage/" ]]; then
+	echo "mythpreviewgen: no banner for $preview_infile, using transparent image" >> /tmp/mythpreviewgen
+	mysqlout=$(echo "SELECT basename FROM recorded WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg | head -n1)
+	preview_outfile=$pre_storage/$(echo $mysqlout | cut -d' ' -f1).png
+	banner=$art_storage/images/1x1-trans.png
+	#exit 1
+fi
+
+if [[ "x$preview_outfile" == "x$storage/.png" ]]; then
+	echo "mythpreviewgen: no output file could be determined for $preview_infile, and none specified" >> /tmp/mythpreviewgen
+	exit 1
+fi
+
+echo "mythpreviewgen: banner $banner found for $preview_infile (${preview_outfile})" >> /tmp/mythpreviewgen
+convert "$banner" "$preview_outfile"
