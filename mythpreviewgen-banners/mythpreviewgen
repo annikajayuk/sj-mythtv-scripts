@@ -16,6 +16,12 @@ storage='/var/mythtv/media/recordings'
 rec_storage='/var/mythtv/media/recordings'
 art_storage='/var/mythtv/media/recordings'
 pre_storage='/var/mythtv/media/recordings'
+
+# the command line required for the mysql command line client to connect to 
+#  your MythTV database
+mysql_cmdline="/usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg"
+
+
 # rec_storage='/var/mythtv/media/recordings'
 # art_storage='/var/mythtv/media/artwork'
 # pre_storage='/var/mythtv/media/previews'
@@ -43,7 +49,7 @@ if [[ "x$preview_infile" == "x" ]]; then
 fi
 
 #echo mysql: $(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg) >> /tmp/mythpreviewgen
-mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg | head -n1)
+mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | $mysql_cmdline | head -n1)
 
 # 1004 20140114175900
 
@@ -56,7 +62,7 @@ fi
 banner=$art_storage/$(echo $mysqlout | cut -s -d' ' -f2-)
 
 if [[ "x$banner" == "x$art_storage/" ]]; then
-	mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref WHERE recorded.basename LIKE '$preview_infile%' ORDER BY recordedartwork.season;" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg | head -n1)
+	mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref WHERE recorded.basename LIKE '$preview_infile%' ORDER BY recordedartwork.season;" | $mysql_cmdline | head -n1)
 	banner=$art_storage/$(echo $mysqlout | cut -s -d' ' -f2-)
 	if [[ "x$preview_outfile" == "x$pre_storage/.png" ]]; then
 		preview_outfile=$pre_storage/$(echo $mysqlout | cut -d' ' -f1).png
@@ -65,7 +71,7 @@ fi
 
 if [[ "x$banner" == "x$art_storage/" ]]; then
 	echo "mythpreviewgen: no banner for $preview_infile, using transparent image" >> /tmp/mythpreviewgen
-	mysqlout=$(echo "SELECT basename FROM recorded WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg | head -n1)
+	mysqlout=$(echo "SELECT basename FROM recorded WHERE recorded.basename LIKE '$preview_infile%';" | $mysql_cmdline | head -n1)
 	preview_outfile=$pre_storage/$(echo $mysqlout | cut -d' ' -f1).png
 	banner=$art_storage/images/1x1-trans.png
 	#exit 1
