@@ -10,13 +10,18 @@ art_storage='/var/mythtv/media/recordings'
 # again, MythTV's default is your “Default” storage group
 pre_storage='/var/mythtv/media/recordings'
 
+# username and password for MySQL
+mysql_username="mythtv"
+mysql_password="mythtv"
 
-# the command line required for the mysql command line client to connect to 
-#  your MythTV database
-mysql_cmdline="/usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg"
+# the location of the mysql command line client on your system
+mysql_command="/usr/local/mysql/bin/mysql"
+
+# **YOU SHOULDN'T NEED TO CHANGE ANYTHING BELOW THIS LINE**
 
 
-# YOU SHOULDN'T NEED TO CHANGE ANYTHING BELOW THIS LINE
+mysql_dbname=mythconverg
+mysql_cmdline="$mysql_command -u$mysql_username -p$mysql_password -N $mysql_dbname"
 
 
 # Note that we use `"$@"' to let each command-line parameter expand to a 
