@@ -71,7 +71,7 @@ if [[ "x$banner" == "x$art_storage/" ]]; then
 	#exit 1
 fi
 
-if [[ "x$preview_outfile" == "x$storage/.png" ]]; then
+if [[ "x$preview_outfile" == "x$pre_storage/.png" ]]; then
 	echo "mythpreviewgen: no output file could be determined for $preview_infile, and none specified" >> /tmp/mythpreviewgen
 	exit 1
 fi
