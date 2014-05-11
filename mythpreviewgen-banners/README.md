@@ -9,26 +9,24 @@ Until MythTV supports using a banner imagetype widget in the recordings buttonli
 
 My themes [Barry](https://github.com/sammyjayuk/Barry_dev) and [Anita](https://github.com/sammyjayuk/Anita_dev) are best used with ~~this script~~ *a better implementation of what this script does*, but failing that, you can use this one :P
 
-Installation
-------------
+Configuration & Installation
+----------------------------
 
 Still here? I’ll keep it brief, then—you obviously know what you’re doing.
 
 You’ll need imagemagick installed, so go get that.
 
-You’ll also need to make sure you have only one directory specified for the Storage Group.
+You’ll also need to make sure you have only one directory specified for each of the Storage Groups. Separate Storage Groups are fine.
 
-Find these lines in the script:
+Open the script in your favourite text editor, and change the settings at the top of the file to suit your system:
 
-```bash
-rec_storage='/var/mythtv/media/recordings'
-art_storage='/var/mythtv/media/recordings'
-pre_storage='/var/mythtv/media/recordings'
-```
+`art_storage` is where MythTV stores the metadata artwork for your recordings.
 
-The first one is where your recordings are, the second is where the banners are, and the third is where the generated image should go. I don’t know whether there’s a separate Storage Group for the third one, or whether they go in with the recordings.
+`pre_storage` is where the generated image should go.
 
-Replace all instances of `/usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg` with the command line required on your system to use the MySQL command line client.
+`mysql_username` and `mysql_password` are the user name and password for MySQL. User name is generally "mythtv". You can find the password in the ~/.mythtv/config.xml file.
+
+`mysql_command` is the location of the mysql command line client on your system.
 
 That’s almost it, so time for a **big fat warning/disclaimer**:
 *This script may result in actual death, as a result of your fiancé/fiancée/husband/wife bludgeoning you to death with a remote control because all your recordings have disappeared. I cannot be held responsible for this (not that you would be in a position to hold anyone anything, since you would be dead), or anything else.*
