@@ -1,6 +1,23 @@
 #!/bin/bash
 
-# echo "mythpreviewgen: args are" "$*" >> /tmp/mythpreviewgen
+# Settings:
+
+# where metadata artwork for your recordings is stored
+# MythTV's default is your “Default” storage group
+art_storage='/var/mythtv/media/recordings'
+
+# where generated images should go, generally where your recordings are stored
+# again, MythTV's default is your “Default” storage group
+pre_storage='/var/mythtv/media/recordings'
+
+
+# the command line required for the mysql command line client to connect to 
+#  your MythTV database
+mysql_cmdline="/usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg"
+
+
+# YOU SHOULDN'T NEED TO CHANGE ANYTHING BELOW THIS LINE
+
 
 # Note that we use `"$@"' to let each command-line parameter expand to a 
 # separate word. The quotes around `$@' are essential!
@@ -12,24 +29,12 @@ TEMP=`getopt -o a --long size:,infile:,outfile:,chanid:,starttime: -n 'mythprevi
 # Note the quotes around `$TEMP': they are essential!
 eval set -- "$TEMP"
 
-storage='/var/mythtv/media/recordings'
-rec_storage='/var/mythtv/media/recordings'
-art_storage='/var/mythtv/media/recordings'
-pre_storage='/var/mythtv/media/recordings'
-
-# the command line required for the mysql command line client to connect to 
-#  your MythTV database
-mysql_cmdline="/usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg"
-
-
-# rec_storage='/var/mythtv/media/recordings'
-# art_storage='/var/mythtv/media/artwork'
-# pre_storage='/var/mythtv/media/previews'
 preview_size=''
 preview_infile=''
 preview_outfile=''
 preview_chanid=''
 preview_starttime=''
+
 while true ; do
         case "$1" in
                 --size) preview_size="$2" ; shift 2 ;;
@@ -43,17 +48,11 @@ while true ; do
 done
 
 
-
 if [[ "x$preview_infile" == "x" ]]; then
 	preview_infile=${preview_chanid}_$preview_starttime
 fi
 
-#echo mysql: $(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | /usr/local/mysql/bin/mysql -umythtv -pmythtv -N mythconverg) >> /tmp/mythpreviewgen
 mysqlout=$(echo "SELECT basename, banner FROM recorded INNER JOIN recordedartwork ON recorded.inetref = recordedartwork.inetref AND recorded.season = recordedartwork.season WHERE recorded.basename LIKE '$preview_infile%';" | $mysql_cmdline | head -n1)
-
-# 1004 20140114175900
-
-# 1002_20140109212900
 
 if [[ "x$preview_outfile" == "x" ]]; then
 	preview_outfile=$pre_storage/$(echo $mysqlout | cut -d' ' -f1).png
