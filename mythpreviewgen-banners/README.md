@@ -1,7 +1,8 @@
 mythpreviewgen-banners
 ======================
 
-**YOU SHOULD BE USING MY NEW [PYTHON VERSION](https://github.com/sammyjayuk/sj-mythtv-scripts/tree/master/mythpreviewgen-banners.py) OF THIS SCRIPT**
+**YOU SHOULD BE USING MY NEW [PYTHON VERSION](https://github.com/sammyjayuk/sj-mythtv-scripts/tree/master/mythpreviewgen-banners.py) OF THIS SCRIPT!!**
+Seriously, it's much better!
 
 
 
