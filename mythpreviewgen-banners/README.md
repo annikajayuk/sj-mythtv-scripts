@@ -1,6 +1,10 @@
 mythpreviewgen-banners
 ======================
 
+**YOU SHOULD BE USING MY NEW [PYTHON VERSION](https://github.com/sammyjayuk/sj-mythtv-scripts/tree/master/mythpreviewgen-banners.py) OF THIS SCRIPT**
+
+
+
 **YOU WILL DEFINITELY NEED TO MODIFY THIS SCRIPT TO SUIT YOUR SYSTEM.** See [Configuration & Installation](#configuration--installation) below.
 
 **This script has only been tested on Mac OS X.** It has not been tested on any other system. Importantly, OS X uses BSD utilities, whereas Linux uses GNU. In this script, I use `head` and `cut`.
