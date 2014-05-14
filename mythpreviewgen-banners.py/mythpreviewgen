@@ -12,8 +12,13 @@ use_transparent_image = False
 
 import sys, logging
 LOG_FILENAME = '/tmp/mythpreviewgen.py.log'
-logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
-logger = logging.getLogger('mythpreviewgen')
+try:
+    logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+    logger = logging.getLogger('mythpreviewgen')
+except:
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('mythpreviewgen')
+    logger.debug('unable to open log file: %s, using stdout' % (LOG_FILENAME))
 logger.debug('mythpreviewgen started with args: %s' % (sys.argv))
 
 from MythTV import MythDB, datetime
