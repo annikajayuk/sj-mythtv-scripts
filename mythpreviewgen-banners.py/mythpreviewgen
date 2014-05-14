@@ -1,0 +1,89 @@
+#!/usr/bin/python
+
+## Setting
+
+# one setting: whether to use a transparent .png when a banner can't be found
+#  set this to True if you get odd looking images in the recordings list
+use_transparent_image = False
+
+## END OF SETTING
+
+
+
+import sys, logging
+LOG_FILENAME = '/tmp/mythpreviewgen.py.log'
+logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+logger = logging.getLogger('mythpreviewgen')
+logger.debug('mythpreviewgen started with args: %s' % (sys.argv))
+
+from MythTV import MythDB, datetime
+from subprocess import call
+import argparse
+
+db = MythDB()
+parser = argparse.ArgumentParser()
+
+
+parser.add_argument("--chanid", required=True, help="chanid of the recording to generate a previewbanner for, ex: 1004")
+parser.add_argument("--starttime", required=True, help="starttime of the recording to generate a previewbanner for, ex: 20140513165900")
+# parser.add_argument("--infile", help="filename of the recording to generate a previewbanner for")
+parser.add_argument("--outfile", help="the previewbanner output filename")
+
+args, args_unknown = parser.parse_known_args()
+
+# get the recording
+rec = None
+if args.chanid is not None and args.starttime is not None:
+    for r in db.searchRecorded(chanid=args.chanid, starttime=datetime.frommythtime(args.starttime, tz='Etc/UTC')):
+        rec = r
+else:
+    print 'ABORT: both --chanid and --starttime must be provided'
+    sys.exit(1)
+
+if rec is None:
+    print 'ABORT: Unable to find a recording'
+    sys.exit(1)
+
+
+# get the recording filename
+recfilename = None
+try:
+    recfile = rec.open()
+    recfilename = recfile.name
+except:
+    print 'ABORT: Unable to open recording (file may not be local)'
+    recfile.close()
+    sys.exit(1)
+recfile.close()
+
+
+# try to get the banner filename
+bannerfilename = None
+try:
+    bannerfile = rec.artwork.banner.open()
+    bannerfilename = bannerfile.name
+except:
+    if use_transparent_image is True:
+        print 'Unable to open banner, using transparent image (recording has no banner, file does not exist, or is not local)'
+        bannerfilename = 'canvas:transparent'
+        recfile.close()
+    else:
+        print 'ABORT: Unable to open banner (recording has no banner, file does not exist, or is not local)'
+        recfile.close()
+        sys.exit(0)
+
+
+# set the output filename
+outfilename = args.outfile
+if outfilename is None and recfilename is not None:
+    outfilename = recfilename + '.png'
+
+if outfilename is None:
+    print 'ABORT: Unable to determine output filename'
+    sys.exit(1)
+
+
+# generate the previewbanner
+call(['convert', bannerfilename, outfilename])
+
+logger.debug('mythpreviewgen finished')
