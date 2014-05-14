@@ -1,5 +1,5 @@
-mythpreviewgen-banners
-======================
+mythpreviewgen-banners.py
+=========================
 
 *Now with Python goodness, this new and improved script should be used instead of [the old one](https://github.com/sammyjayuk/sj-mythtv-scripts/tree/master/mythpreviewgen-banners).*
 
