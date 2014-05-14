@@ -23,7 +23,7 @@ You'll also need to make sure that MythTV's Python bindings work properly. If me
 That’s almost it, so time for a **big fat warning/disclaimer**:
 *This script may result in actual death, as a result of your fiancé/fiancée/husband/wife bludgeoning you to death with a remote control because all your recordings have disappeared. I cannot be held responsible for this (not that you would be in a position to hold anyone anything, since you would be dead), or anything else.*
 
-That said, I have been using a much crappier version of this script for several months, and fiancé-remote-control-bludgeoning has yet to occur, at least as a result of this script. *This script* is **much** better.
+That said, I have been using a crappier version of this script for several months, and fiancé-remote-control-bludgeoning has yet to occur, at least as a result of this script. *This script* is **much** better.
 
 Finally, find `mythpreviewgen` on your system (probably `/usr/bin/mythpreviewgen` on Linux, `/opt/local/bin/mythpreviewgen` for MacPorts), move it aside, and put this script in its place, remembering to check that the executable bit is set appropriately and adjusting the shebang (if necessary) to point to bash.
 
