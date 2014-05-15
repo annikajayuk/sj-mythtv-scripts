@@ -1,12 +1,22 @@
 #!/usr/bin/python
 
-## Setting
+### Settings
 
-# one setting: whether to use a transparent .png when a banner can't be found
-#  set this to True if you get odd looking images in the recordings list
+## use_generic_banner: whether to use a generic programme banner if no banner 
+#    specific to the programme's season can be found. This uses the same logic 
+#    as MythTV, i.e. it uses the *highest* season. However, be aware that 
+#    MythTV then might not try to generate the image again for some time.
+## default: False
+use_generic_banner = False
+
+## use_transparent_image: whether to use a transparent .png when no banner can 
+#    be found. Set this to True if you get odd looking images in the recordings 
+#    list, but be aware that MythTV then might not try to generate the image 
+#    again for some time.
+## default: False
 use_transparent_image = False
 
-## END OF SETTING
+### END OF SETTINGS
 
 
 
@@ -22,7 +32,8 @@ except:
 logger.debug('mythpreviewgen started with args: %s' % (sys.argv))
 
 from MythTV import MythDB, datetime
-from subprocess import call
+import subprocess
+from operator import attrgetter
 import argparse
 
 db = MythDB()
@@ -42,11 +53,11 @@ if args.chanid is not None and args.starttime is not None:
     for r in db.searchRecorded(chanid=args.chanid, starttime=datetime.frommythtime(args.starttime, tz='Etc/UTC')):
         rec = r
 else:
-    print 'ABORT: both --chanid and --starttime must be provided'
+    logger.error('ABORT: both --chanid and --starttime must be provided')
     sys.exit(1)
 
 if rec is None:
-    print 'ABORT: Unable to find a recording'
+    logger.error('ABORT: Unable to find a recording')
     sys.exit(1)
 
 
@@ -55,11 +66,14 @@ recfilename = None
 try:
     recfile = rec.open()
     recfilename = recfile.name
-except:
-    print 'ABORT: Unable to open recording (file may not be local)'
     recfile.close()
+except:
+    logger.error('ABORT: Unable to open recording (file may not be local)')
+    try:
+        recfile.close()
+    except:
+        pass
     sys.exit(1)
-recfile.close()
 
 
 # try to get the banner filename
@@ -67,15 +81,45 @@ bannerfilename = None
 try:
     bannerfile = rec.artwork.banner.open()
     bannerfilename = bannerfile.name
+    bannerfile.close()
 except:
-    if use_transparent_image is True:
-        print 'Unable to open banner, using transparent image (recording has no banner, file does not exist, or is not local)'
-        bannerfilename = 'canvas:transparent'
-        recfile.close()
-    else:
-        print 'ABORT: Unable to open banner (recording has no banner, file does not exist, or is not local)'
-        recfile.close()
-        sys.exit(0)
+    logger.debug('Unable to open specific season banner (recording has no banner, file does not exist, or is not local)')
+    try:
+        bannerfile.close()
+    except:
+        pass
+
+# try to get a generic banner filename
+if bannerfilename is None and use_generic_banner is True:
+    logger.debug('Trying to use generic programme banner')
+    if rec.inetref != '':
+        try:
+            generic_artworks = sorted(list(db.searchArtwork(inetref=rec.inetref)), key=attrgetter('season'), reverse=True)
+            for artwork in generic_artworks:
+                try:
+                    bannerfile = artwork.banner.open()
+                    bannerfilename = bannerfile.name
+                    bannerfile.close()
+                    break
+                except:
+                    try:
+                        bannerfile.close()
+                    except:
+                        pass
+        except:
+            pass
+    if bannerfilename is None:
+        logger.debug('Could not find generic banner')
+
+
+if bannerfilename is None and use_transparent_image is True:
+    logger.debug('Unable to find banner, using transparent image')
+    bannerfilename = 'canvas:transparent'
+    recfile.close()
+elif bannerfilename is None:
+    logger.error('ABORT: Unable to find banner')
+    recfile.close()
+    sys.exit(0)
 
 
 # set the output filename
@@ -84,11 +128,15 @@ if outfilename is None and recfilename is not None:
     outfilename = recfilename + '.png'
 
 if outfilename is None:
-    print 'ABORT: Unable to determine output filename'
+    logger.error('ABORT: Unable to determine output filename')
     sys.exit(1)
 
 
 # generate the previewbanner
-call(['convert', bannerfilename, outfilename])
+try:
+    subprocess.check_output(['convert', bannerfilename, outfilename], stderr=subprocess.STDOUT)
+    logger.debug('SUCCESS: mythpreviewgen finished, %s saved to %s' % (bannerfilename, outfilename))
+except subprocess.CalledProcessError as e:
+    logger.error('error %s running convert (%s):' % (e.returncode, e.cmd))
+    logger.error(' ' + str(e.output))
 
-logger.debug('mythpreviewgen finished')
